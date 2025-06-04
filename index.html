@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M5 Device Webshop</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f9f9f9; color: #222; }
+    header, footer { background: #111; color: #fff; padding: 1rem; text-align: center; }
+    .lang-switch { position: absolute; top: 10px; right: 20px; }
+    .lang-switch img { width: 25px; cursor: pointer; margin-left: 10px; }
+    .container { padding: 2rem; max-width: 1200px; margin: auto; }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
+    .product { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1); transition: 0.3s; }
+    .product img { width: 100%; height: 200px; object-fit: cover; }
+    .product-info { padding: 1rem; }
+    .product-info h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .product-info p { font-size: 0.9rem; color: #444; }
+    .product-actions { display: flex; justify-content: space-between; margin-top: 1rem; }
+    .product-actions button { padding: 0.5rem 1rem; border: none; background: #222; color: #fff; cursor: pointer; border-radius: 6px; }
+    .cart-icon { position: fixed; top: 15px; left: 20px; font-size: 1.4rem; color: #fff; cursor: pointer; }
+    .checkout-page, .product-detail { display: none; }
+    .hidden { display: none !important; }
+    .footer-trust { font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.8; }
+    .review { border-top: 1px solid #ddd; padding-top: 1rem; margin-top: 1rem; }
+    .rating { color: #f2c200; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="cart-icon" onclick="goToCart()"><i class="fas fa-shopping-cart"></i></div>
+    <h1>M5 Device Webshop</h1>
+    <div class="lang-switch">
+      <img src="https://flagcdn.com/w40/hu.png" onclick="switchLang('hu')">
+      <img src="https://flagcdn.com/w40/gb.png" onclick="switchLang('en')">
+    </div>
+  </header>
+
+  <div class="container main-page">
+    <div class="product-grid" id="productGrid">
+      <!-- Termékek dinamikusan betöltve -->
+    </div>
+  </div>
+
+  <div class="container checkout-page hidden">
+    <button onclick="goBack()">⬅ Vissza a főoldalra</button>
+    <h2>Kosár</h2>
+    <div id="cartItems"></div>
+    <h3>Szállítási adatok</h3>
+    <form id="orderForm" onsubmit="return submitOrder(event)">
+      <input type="text" placeholder="Teljes név" required><br>
+      <input type="email" placeholder="Email" required><br>
+      <input type="text" placeholder="Cím" required><br>
+      <input type="text" placeholder="Irányítószám" required><br>
+      <input type="text" placeholder="Város" required><br>
+      <input type="text" placeholder="Telefonszám" required><br>
+      <input type="text" placeholder="Kuponkód (opcionális)"><br>
+      <h4>Fizetési mód:</h4>
+      <button type="button">Bankkártya</button>
+      <button type="button">PayPal</button>
+      <button type="button">Barion</button>
+      <br><br>
+      <button type="submit">Megrendelem</button>
+    </form>
+  </div>
+
+  <footer>
+    <div class="footer-trust">
+      <p>✔️ Biztonságos fizetés | ✔️ Gyors szállítás | ✔️ Megbízható bolt</p>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="paypal" height="30">
+    </div>
+  </footer>
+
+  <script>
+    const products = [
+      {
+        id: 1,
+        name: 'M5Shark Device',
+        description: 'Innovatív eszköz, amely segít a biztonságos hálózati kapcsolatokban.',
+        price: 16500,
+        image: 'https://m5shark.com/cdn/shop/files/m5shark_5.jpg',
+        reviews: []
+      },
+      {
+        id: 2,
+        name: 'M5Shark Guide',
+        description: 'Részletes útmutató az M5Shark használatához.',
+        price: 0,
+        image: 'https://m5shark.com/cdn/shop/files/guide.jpg',
+        reviews: []
+      }
+    ];
+
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    function loadProducts() {
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = '';
+      products.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'product';
+        div.innerHTML = `
+          <img src="${p.image}" alt="${p.name}">
+          <div class="product-info">
+            <h2>${p.name}</h2>
+            <p>${p.description}</p>
+            <div class="product-actions">
+              <button onclick="addToCart(${p.id})">Kosárba</button>
+              <button onclick="goToDetail(${p.id})">Részletek</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    function addToCart(id) {
+      const item = products.find(p => p.id === id);
+      if (item) cart.push(item);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      alert('Termék a kosárba került');
+    }
+
+    function goToCart() {
+      document.querySelector('.main-page').classList.add('hidden');
+      document.querySelector('.checkout-page').classList.remove('hidden');
+      showCart();
+    }
+
+    function goBack() {
+      document.querySelector('.main-page').classList.remove('hidden');
+      document.querySelector('.checkout-page').classList.add('hidden');
+    }
+
+    function showCart() {
+      const box = document.getElementById('cartItems');
+      box.innerHTML = '';
+      if (!cart.length) return box.innerHTML = '<p>A kosár üres</p>';
+      cart.forEach(p => {
+        box.innerHTML += `<p>${p.name} - ${p.price} Ft</p>`;
+      });
+    }
+
+    function submitOrder(e) {
+      e.preventDefault();
+      const fields = document.querySelectorAll('#orderForm input');
+      const details = [...fields].map(f => f.value).join('\n');
+      const body = `Rendelés:\n${details}\nTermékek:\n${cart.map(p => `${p.name} - ${p.price} Ft`).join('\n')}`;
+      window.open(`mailto:lekrinszki.gergo@gmail.com?subject=Új rendelés&body=${encodeURIComponent(body)}`);
+      alert('Rendelés elküldve emailben!');
+      return false;
+    }
+
+    function switchLang(lang) {
+      alert('Nyelvváltás (még nincs lokalizálva): ' + lang);
+    }
+
+    window.onload = loadProducts;
+  </script>
+</body>
+</html>
